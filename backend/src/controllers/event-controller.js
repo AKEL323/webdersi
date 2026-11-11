@@ -31,3 +31,44 @@ export function getEventById(req, res) {
 
   return res.status(200).json(event);
 }
+
+// POST /events
+// Yeni etkinlik oluşturur.
+export function createEvent(req, res) {
+  const {
+    title,
+    category,
+    date,
+    time,
+    location,
+    description,
+    capacity,
+  } = req.body ?? {};
+
+  // Zorunlu alanların kontrolü
+  if (!title || !category || !date) {
+    return res.status(400).json({
+      error: {
+        message: "title, category and date are required",
+      },
+    });
+  }
+
+  // Yeni etkinlik nesnesi
+  const newEvent = {
+    id: `event-${Date.now()}`,
+    title,
+    category,
+    date,
+    capacity: Number(capacity) || 0,
+    time: time ?? "",
+    location: location ?? "",
+    description: description ?? "",
+  };
+
+  // Etkinliği bellekteki diziye ekle
+  events.push(newEvent);
+
+  // Oluşturulan etkinliği 201 ile döndür
+  return res.status(201).json(newEvent);
+}
