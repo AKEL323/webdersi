@@ -22,11 +22,22 @@ app.get("/health", (req, res) => {
 // Etkinlik route'ları
 app.use("/events", eventRoutes);
 
-// Tanımlanmayan adresler için 404
+// Bulunmayan adresler
 app.use((req, res) => {
   return res.status(404).json({
     error: {
       message: "Route not found",
+    },
+  });
+});
+
+// Merkezi hata yakalama middleware'i
+app.use((err, req, res, next) => {
+  console.error(err.message);
+
+  return res.status(500).json({
+    error: {
+      message: "Server error",
     },
   });
 });
