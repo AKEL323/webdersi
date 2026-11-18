@@ -1,74 +1,83 @@
 
-import { events } from "../data/events.js";
+import mongoose from "mongoose";
+import Event from "../models/event-model.js";
 
 // GET /events
-// Bütün etkinlikleri getirir.
-// Kategori parametresi gönderilirse filtreler.
-export function getEvents(req, res) {
-  const { category } = req.query;
+// MongoDB'deki bütün etkinlikleri getirir.
+export async function getEvents(req, res, next) {
+  try {
+    const filter = {};
 
-  const list = category
-    ? events.filter((event) => event.category === category)
-    : events;
+    // İsteğe bağlı kategori filtresi
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
 
-  return res.status(200).json(list);
+    const events = await Event.find(filter)
+      .sort({ date: 1, time: 1 });
+
+    return res.status(200).json(events);
+  } catch (error) {
+    return next(error);
+  }
 }
 
 // GET /events/:id
-// ID üzerinden tek etkinliği getirir.
-export function getEventById(req, res) {
-  const event = events.find(
-    (item) => item.id === req.params.id
-  );
+// MongoDB ObjectId ile tek etkinliği getirir.
+export async function getEventById(req, res, next) {
+  try {
+    const { id } = req.params;
 
-  if (!event) {
-    return res.status(404).json({
-      error: {
-        message: "Event not found",
-      },
-    });
+    // Geçersiz MongoDB ID kontrolü
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(404).json({
+        error: {
+          message: "Event not found",
+        },
+      });
+    }
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        error: {
+          message: "Event not found",
+        },
+      });
+    }
+
+    return res.status(200).json(event);
+  } catch (error) {
+    return next(error);
   }
-
-  return res.status(200).json(event);
 }
 
 // POST /events
-// Yeni etkinlik oluşturur.
-export function createEvent(req, res) {
-  const {
-    title,
-    category,
-    date,
-    time,
-    location,
-    description,
-    capacity,
-  } = req.body ?? {};
+// MongoDB'ye yeni etkinlik kaydeder.
+export async function createEvent(req, res, next) {
+  try {
+    const newEvent = await Event.create(req.body ?? {});
 
-  // Zorunlu alanların kontrolü
-  if (!title || !category || !date) {
-    return res.status(400).json({
-      error: {
-        message: "title, category and date are required",
-      },
-    });
+    return res.status(201).json(newEvent);
+  } catch (error) {
+    // Mongoose doğrulama hataları 400 döndürür.
+    if (
+      error.name === "ValidationError" ||
+      error.name === "CastError"
+    ) {
+      const details = error.errors
+        ? Object.values(error.errors).map((item) => item.message)
+        : [error.message];
+
+      return res.status(400).json({
+        error: {
+          message: "Geçersiz etkinlik verisi",
+          details,
+        },
+      });
+    }
+
+    return next(error);
   }
-
-  // Yeni etkinlik nesnesi
-  const newEvent = {
-    id: `event-${Date.now()}`,
-    title,
-    category,
-    date,
-    capacity: Number(capacity) || 0,
-    time: time ?? "",
-    location: location ?? "",
-    description: description ?? "",
-  };
-
-  // Etkinliği bellekteki diziye ekle
-  events.push(newEvent);
-
-  // Oluşturulan etkinliği 201 ile döndür
-  return res.status(201).json(newEvent);
 }
