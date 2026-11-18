@@ -1,462 +1,357 @@
 
+# Kampüs Etkinlikleri API
 
-\# Kampüs Etkinlikleri API
+## Sprint 8 - MongoDB ve Mongoose ile Kalıcı Veri
 
+Bu proje, Kampüs Etkinlikleri uygulamasının Express ve MongoDB
+kullanılarak geliştirilmiş backend uygulamasıdır.
 
+Sprint 7'de RAM üzerinde tutulan etkinlik verileri, Sprint 8'de
+MongoDB Atlas veritabanına taşınmıştır.
 
-\## Sprint 7 - Express ile REST API
+Böylece sunucu yeniden başlatıldığında etkinlik kayıtları kaybolmaz.
 
+## Kullanılan Teknolojiler
 
+- Node.js
+- Express
+- MongoDB Atlas
+- Mongoose
+- dotenv
+- cors
+- JavaScript ES Modules
 
-Bu proje, Kampüs Etkinlikleri uygulamasının backend başlangıç sürümüdür.
-
-
-
-Node.js ve Express kullanılarak etkinlik verilerini JSON formatında sunan bir REST API geliştirilmiştir.
-
-
-
-\## Kullanılan Teknolojiler
-
-
-
-\- Node.js
-
-\- Express
-
-\- dotenv
-
-\- cors
-
-\- JavaScript ES Modules
-
-
-
-\## Proje Yapısı
-
-
+## Proje Yapısı
 
 ```text
-
 backend/
-
 ├── src/
-
-│   ├── app.js
-
-│   ├── server.js
-
-│   ├── routes/
-
-│   │   └── event-routes.js
-
+│   ├── config/
+│   │   └── database.js
 │   ├── controllers/
-
 │   │   └── event-controller.js
-
-│   └── data/
-
-│       └── events.js
-
+│   ├── data/
+│   │   └── seed-events.js
+│   ├── models/
+│   │   └── event-model.js
+│   ├── routes/
+│   │   └── event-routes.js
+│   ├── app.js
+│   ├── server.js
+│   └── seed.js
 ├── requests/
-
 │   └── kampus-api.json
-
 ├── .env
-
 ├── .env.example
-
 ├── .gitignore
-
 ├── package.json
-
+├── package-lock.json
 └── README.md
-
 ```
 
+## Kurulum
 
-
-\## Kurulum
-
-
-
-Backend klasörüne girin:
-
-
+Backend klasöründe paketleri yükleyin:
 
 ```bash
-
-cd backend
-
-```
-
-
-
-Paketleri yükleyin:
-
-
-
-```bash
-
 npm install
-
 ```
 
+## Ortam Değişkenleri
 
+Backend klasöründe `.env` dosyası oluşturun.
 
-`.env.example` dosyasını kopyalayarak `.env` oluşturun.
-
-
-
-PowerShell:
-
-
-
-```powershell
-
-Copy-Item .env.example .env
-
-```
-
-
-
-`.env` dosyasındaki değerleri bilgisayarınıza göre düzenleyin:
-
-
+`.env.example` dosyasındaki örnek değerleri kullanabilirsiniz.
 
 ```env
-
 PORT=3000
-
-STUDENT\_NUMBER=YOUR\_STUDENT\_NUMBER
-
+STUDENT_NUMBER=YOUR_STUDENT_NUMBER
+MONGODB_URI=mongodb+srv://DATABASE_USER:PASSWORD@YOUR_CLUSTER.mongodb.net/kampus
 ```
 
+Açıklamalar:
 
+- PORT: Sunucunun çalışacağı port.
+- STUDENT_NUMBER: Öğrenci numarası.
+- MONGODB_URI: MongoDB bağlantı adresi.
 
-`YOUR\_STUDENT\_NUMBER` yerine kendi öğrenci numaranızı yazın.
+Gerçek MongoDB Atlas bağlantı adresi yalnızca yerel `.env`
+dosyasında tutulmalıdır.
 
+Gerçek kullanıcı adı ve şifre GitHub'a gönderilmemelidir.
 
+`.env.example` dosyasında gerçek bağlantı bilgileri bulunmaz.
 
-\## Sunucuyu Çalıştırma
-
-
+## Sunucuyu Çalıştırma
 
 Geliştirme modu:
 
-
-
 ```bash
-
 npm run dev
-
 ```
-
-
 
 Normal başlatma:
 
-
-
 ```bash
-
 npm start
-
 ```
-
-
 
 API adresi:
 
-
-
 ```text
-
 http://localhost:3000
-
 ```
 
+## MongoDB Bağlantısı
 
+Veritabanı bağlantısı:
 
-\## REST API Sözleşmesi
+```text
+src/config/database.js
+```
 
+dosyasında tanımlanmıştır.
 
+Mongoose kullanılarak `process.env.MONGODB_URI` üzerinden
+MongoDB bağlantısı kurulur.
+
+Sunucu başlamadan önce veritabanı bağlantısı tamamlanır.
+
+Bağlantı kurulamazsa sunucu başlatılmaz.
+
+Bağlantı mesajında veritabanı adresi ve adı gösterilir;
+şifre terminale yazdırılmaz.
+
+## Schema ve Model
+
+Etkinlik şeması:
+
+```text
+src/models/event-model.js
+```
+
+dosyasında tanımlanmıştır.
+
+Event modeli aşağıdaki alanları içerir:
+
+| Alan | Kural |
+|---|---|
+| title | Zorunlu, trim, 3-100 karakter |
+| category | Zorunlu, enum |
+| capacity | Number, minimum 0, varsayılan 0 |
+| date | Zorunlu |
+| time | Varsayılan boş metin |
+| location | Trim, varsayılan boş metin |
+| description | Trim, en fazla 500 karakter |
+| createdAt | Otomatik |
+| updatedAt | Otomatik |
+
+İzin verilen kategoriler:
+
+- Seminer
+- Atölye
+- Söyleşi
+- Yarışma
+
+Mongoose timestamps özelliği sayesinde `createdAt` ve
+`updatedAt` alanları otomatik oluşturulur.
+
+MongoDB her belgeye otomatik `_id` değeri verir.
+
+## Seed İşlemi
+
+Başlangıç etkinlikleri:
+
+```text
+src/data/seed-events.js
+```
+
+dosyasında tutulur.
+
+Seed çalıştırıcısı:
+
+```text
+src/seed.js
+```
+
+dosyasıdır.
+
+Altı başlangıç etkinliğini MongoDB'ye eklemek için:
+
+```bash
+npm run seed
+```
+
+Seed işlemi önce mevcut events koleksiyonundaki kayıtları
+siler, ardından altı başlangıç etkinliğini yeniden ekler.
+
+Bu nedenle seed iki kez çalıştırıldığında kayıt sayısı
+12'ye çıkmaz; koleksiyonda yeniden 6 başlangıç kaydı kalır.
+
+Önemli: Seed çalıştırıldığında POST ile sonradan eklenen
+etkinlikler de silinir.
+
+## REST API Sözleşmesi
 
 | Method | Endpoint | Açıklama | Başarılı | Hata |
-
 |---|---|---|---|---|
-
 | GET | /health | Sunucu sağlık kontrolü | 200 | - |
-
 | GET | /events | Etkinlik listesini getirir | 200 | - |
-
-| GET | /events/:id | Tek etkinliği getirir | 200 | 404 |
-
+| GET | /events/:id | ID ile etkinlik getirir | 200 | 404 |
 | POST | /events | Yeni etkinlik oluşturur | 201 | 400 |
 
-| PATCH | /events/:id | Etkinlik güncelleme | 200 | 400, 404 |
-
-| DELETE | /events/:id | Etkinlik silme | 204 | 404 |
-
-
-
-PATCH ve DELETE işlemleri sonraki Sprint 9 kapsamında uygulanacaktır. Bu sprintte GET ve POST endpoint'leri tamamlanmıştır.
-
-
-
-\## Endpoint Detayları
-
-
-
-\### 1. GET /health
-
-
+### 1. GET /health
 
 Sunucunun çalıştığını kontrol eder.
 
-
+```text
+GET http://localhost:3000/health
+```
 
 Örnek yanıt:
 
-
-
 ```json
-
 {
-
-&#x20; "status": "ok",
-
-&#x20; "time": "2026-11-11T12:00:00.000Z",
-
-&#x20; "student": "YOUR\_STUDENT\_NUMBER"
-
+  "status": "ok",
+  "time": "2026-11-18T09:00:00.000Z",
+  "student": "YOUR_STUDENT_NUMBER"
 }
-
 ```
 
-
-
 HTTP Status: `200 OK`
 
+### 2. GET /events
 
-
-\### 2. GET /events
-
-
-
-Bütün etkinlikleri JSON dizisi olarak döndürür.
-
-
-
-HTTP Status: `200 OK`
-
-
-
-Kategori filtresi isteğe bağlıdır:
-
-
+MongoDB'deki bütün etkinlikleri getirir.
 
 ```text
-
-GET /events?category=Atölye
-
+GET http://localhost:3000/events
 ```
 
+HTTP Status: `200 OK`
 
+Kategori filtresi:
 
-\### 3. GET /events/:id
+```text
+GET http://localhost:3000/events?category=Atölye
+```
 
+### 3. GET /events/:id
 
-
-ID değerine göre tek etkinliği getirir.
-
-
+MongoDB ObjectId kullanılarak tek etkinliği getirir.
 
 Örnek:
 
-
-
 ```text
-
-GET /events/event-2
-
+GET http://localhost:3000/events/MONGODB_OBJECT_ID
 ```
 
+Etkinlik bulunursa `200 OK` döner.
 
-
-Başarılı yanıt: `200 OK`
-
-
-
-Etkinlik bulunamazsa:
-
-
+ID biçimi geçersizse veya kayıt bulunamazsa:
 
 ```json
-
 {
-
-&#x20; "error": {
-
-&#x20;   "message": "Event not found"
-
-&#x20; }
-
+  "error": {
+    "message": "Event not found"
+  }
 }
-
 ```
-
-
 
 HTTP Status: `404 Not Found`
 
-
-
-\### 4. POST /events
-
-
+### 4. POST /events
 
 Yeni etkinlik oluşturur.
 
-
-
-Örnek JSON body:
-
-
+Örnek JSON:
 
 ```json
-
 {
-
-&#x20; "title": "Git Atölyesi",
-
-&#x20; "category": "Atölye",
-
-&#x20; "date": "2026-12-01",
-
-&#x20; "time": "14:00",
-
-&#x20; "location": "Bilgisayar Laboratuvarı 1",
-
-&#x20; "description": "Git ve GitHub ile ilk adımlar.",
-
-&#x20; "capacity": 30
-
+  "title": "Git Atölyesi",
+  "category": "Atölye",
+  "date": "2026-12-01",
+  "time": "14:00",
+  "location": "Bilgisayar Laboratuvarı 1",
+  "description": "Git ve GitHub ile ilk adımlar.",
+  "capacity": 30
 }
-
 ```
 
+Başarılı olduğunda:
 
-
-Başarılı yanıt:
-
-
-
-\- HTTP Status: `201 Created`
-
-\- Yeni etkinlik otomatik ID alır.
-
-\- Oluşturulan etkinlik JSON olarak döndürülür.
-
-
+- HTTP Status: `201 Created`
+- MongoDB otomatik `_id` oluşturur.
+- `createdAt` ve `updatedAt` alanları oluşturulur.
+- Oluşturulan etkinlik JSON olarak döndürülür.
 
 Zorunlu alanlar:
 
+- title
+- category
+- date
 
+Eksik veya geçersiz veri gönderildiğinde:
 
-\- title
+- HTTP Status: `400 Bad Request`
+- Hata mesajı JSON formatında döndürülür.
 
-\- category
+## Hata Yönetimi
 
-\- date
+Beklenmeyen sunucu hataları merkezi hata middleware'i
+tarafından karşılanır.
 
-
-
-Bu alanlardan biri eksikse:
-
-
+Kullanıcıya:
 
 ```json
-
 {
-
-&#x20; "error": {
-
-&#x20;   "message": "title, category and date are required"
-
-&#x20; }
-
+  "error": {
+    "message": "Server error"
+  }
 }
-
 ```
 
+yanıtı döndürülür.
 
+Hatalar sunucunun terminaline yazdırılır.
 
-HTTP Status: `400 Bad Request`
+Bulunmayan route adresleri `404` döndürür.
 
+## Kalıcılık Testi
 
+MongoDB Atlas kullanıldığı için veriler RAM yerine
+veritabanında saklanır.
 
-\## Veri Yönetimi
+Kalıcılık testi:
 
+1. POST /events ile yeni etkinlik oluşturulur.
+2. Oluşturulan etkinliğin `_id` değeri alınır.
+3. Sunucu kapatılır.
+4. Sunucu tekrar başlatılır.
+5. Aynı `_id` ile GET /events/:id isteği yapılır.
+6. Etkinliğin hâlâ mevcut olduğu doğrulanır.
 
-
-Etkinlikler `src/data/events.js` dosyasında JavaScript dizisi içerisinde tutulmaktadır.
-
-
-
-Bu sprintte veriler RAM üzerinde saklanır. Sunucu yeniden başlatıldığında POST ile eklenen kayıtlar başlangıç verilerine döner.
-
-
-
-Veritabanı bağlantısı sonraki sprintlerde eklenecektir.
-
-
-
-\## Postman Testleri
-
-
+## Postman Testleri
 
 Postman koleksiyonu:
 
-
-
 ```text
-
 requests/kampus-api.json
-
 ```
 
+Koleksiyondaki istekler:
 
+1. GET /health - 200
+2. GET /events - 200
+3. GET /events/:id - 200
+4. GET /events/yok - 404
+5. POST /events - 201
+6. POST /events (eksik veri) - 400
 
-Koleksiyonda altı istek bulunmaktadır:
+## Güvenlik
 
-
-
-1\. GET /health - 200
-
-2\. GET /events - 200
-
-3\. GET /events/event-2 - 200
-
-4\. GET /events/yok - 404
-
-5\. POST /events - 201
-
-6\. POST /events - 400
-
-
-
-\## Güvenlik
-
-
-
-\- Gerçek ortam değişkenleri `.env` dosyasında tutulur.
-
-\- `.env` GitHub'a gönderilmez.
-
-\- `.env.example` örnek değişkenleri içerir.
-
-\- `node\_modules` GitHub'a gönderilmez.
-
-
-
+- Gerçek bağlantı adresi `.env` dosyasında tutulur.
+- `.env` GitHub'a gönderilmez.
+- `.env.example` örnek değerler içerir.
+- `node_modules` GitHub'a gönderilmez.
+- Veritabanı şifresi kod içerisine yazılmaz.
