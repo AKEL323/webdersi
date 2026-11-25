@@ -198,3 +198,36 @@ export async function updateEvent(req, res, next) {
     return next(error);
   }
 }
+
+// DELETE /events/:id
+// ID ile etkinliği siler.
+export async function deleteEvent(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    // Geçersiz MongoDB ID kontrolü
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(404).json({
+        error: {
+          message: "Event not found",
+        },
+      });
+    }
+
+    const deletedEvent = await Event.findByIdAndDelete(id);
+
+    // Etkinlik bulunamazsa 404 döndür.
+    if (!deletedEvent) {
+      return res.status(404).json({
+        error: {
+          message: "Event not found",
+        },
+      });
+    }
+
+    // Başarılı silme işleminde yanıt gövdesi gönderme.
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
+}
