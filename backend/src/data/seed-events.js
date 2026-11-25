@@ -4,7 +4,7 @@ export const seedEvents = [
     title: "Kariyer Günleri 2026",
     category: "Seminer",
     capacity: 100,
-    date: "2026-12-10",
+    date: "15-10-2026",
     time: "14:00",
     location: "A Blok Konferans Salonu",
     description:
@@ -14,7 +14,7 @@ export const seedEvents = [
     title: "Robotik ve Arduino Atölyesi",
     category: "Atölye",
     capacity: 30,
-    date: "2026-12-12",
+    date: "12-12-2026",
     time: "10:00",
     location: "Bilgisayar Laboratuvarı 1",
     description:
@@ -24,7 +24,7 @@ export const seedEvents = [
     title: "Siber Güvenlik ve Dijital Dünya",
     category: "Söyleşi",
     capacity: 80,
-    date: "2026-12-15",
+    date: "05-11-2026",
     time: "13:30",
     location: "B Blok Amfi 2",
     description:
@@ -34,7 +34,7 @@ export const seedEvents = [
     title: "Web Tasarım Yarışması",
     category: "Yarışma",
     capacity: 50,
-    date: "2026-12-18",
+    date: "18-12-2026",
     time: "09:30",
     location: "Teknoloji Merkezi",
     description:
@@ -44,7 +44,7 @@ export const seedEvents = [
     title: "Yapay Zeka Uygulamaları Semineri",
     category: "Seminer",
     capacity: 120,
-    date: "2026-12-20",
+    date: "20-12-2026",
     time: "14:00",
     location: "Kültür Merkezi",
     description:
@@ -54,7 +54,7 @@ export const seedEvents = [
     title: "Figma ile Arayüz Tasarımı",
     category: "Atölye",
     capacity: 25,
-    date: "2026-12-22",
+    date: "22-12-2026",
     time: "15:00",
     location: "Tasarım Stüdyosu",
     description:
