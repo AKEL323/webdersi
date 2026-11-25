@@ -19,6 +19,11 @@ const protectedFields = [
   "__v",
 ];
 
+// Arama metnindeki özel regex karakterlerini güvenli hale getirir.
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function handleValidationError(error, res) {
   if (
     error.name === "ValidationError" ||
@@ -40,13 +45,32 @@ function handleValidationError(error, res) {
 }
 
 // GET /events
-// MongoDB'deki bütün etkinlikleri getirir.
+// Etkinlikleri arama ve kategori filtresiyle getirir.
 export async function getEvents(req, res, next) {
   try {
     const filter = {};
 
-    if (req.query.category) {
-      filter.category = req.query.category;
+    // Kategori filtresi
+    const category =
+      typeof req.query.category === "string"
+        ? req.query.category.trim()
+        : "";
+
+    if (category) {
+      filter.category = category;
+    }
+
+    // Başlıkta büyük/küçük harf duyarsız arama
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : "";
+
+    if (search) {
+      filter.title = {
+        $regex: escapeRegex(search),
+        $options: "i",
+      };
     }
 
     const events = await Event.find(filter).sort({
@@ -114,7 +138,6 @@ export async function updateEvent(req, res, next) {
   try {
     const { id } = req.params;
 
-    // Geçersiz ID kontrolü
     if (!mongoose.isValidObjectId(id)) {
       return res.status(404).json({
         error: {
@@ -125,7 +148,6 @@ export async function updateEvent(req, res, next) {
 
     const updates = req.body;
 
-    // Gövde nesne olmalı, boş olmamalı ve dizi olmamalı.
     if (
       !updates ||
       typeof updates !== "object" ||
@@ -141,7 +163,6 @@ export async function updateEvent(req, res, next) {
 
     const fields = Object.keys(updates);
 
-    // Sistem tarafından yönetilen alanları koru.
     const attemptedProtectedFields = fields.filter((field) =>
       protectedFields.includes(field)
     );
@@ -155,7 +176,6 @@ export async function updateEvent(req, res, next) {
       });
     }
 
-    // İzin verilmeyen alanları reddet.
     const invalidFields = fields.filter(
       (field) => !allowedUpdateFields.includes(field)
     );
@@ -169,7 +189,6 @@ export async function updateEvent(req, res, next) {
       });
     }
 
-    // Güncelleme yap ve güncel kaydı döndür.
     const updatedEvent = await Event.findByIdAndUpdate(
       id,
       updates,
@@ -205,7 +224,6 @@ export async function deleteEvent(req, res, next) {
   try {
     const { id } = req.params;
 
-    // Geçersiz MongoDB ID kontrolü
     if (!mongoose.isValidObjectId(id)) {
       return res.status(404).json({
         error: {
@@ -216,7 +234,6 @@ export async function deleteEvent(req, res, next) {
 
     const deletedEvent = await Event.findByIdAndDelete(id);
 
-    // Etkinlik bulunamazsa 404 döndür.
     if (!deletedEvent) {
       return res.status(404).json({
         error: {
@@ -225,7 +242,6 @@ export async function deleteEvent(req, res, next) {
       });
     }
 
-    // Başarılı silme işleminde yanıt gövdesi gönderme.
     return res.status(204).send();
   } catch (error) {
     return next(error);
