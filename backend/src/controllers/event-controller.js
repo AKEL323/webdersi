@@ -1,6 +1,7 @@
 
 import mongoose from "mongoose";
 import Event from "../models/event-model.js";
+import { todayStart } from "../utils/date.js";
 
 const allowedUpdateFields = [
   "title",
@@ -50,7 +51,6 @@ export async function getEvents(req, res, next) {
   try {
     const filter = {};
 
-    // Kategori filtresi
     const category =
       typeof req.query.category === "string"
         ? req.query.category.trim()
@@ -60,7 +60,6 @@ export async function getEvents(req, res, next) {
       filter.category = category;
     }
 
-    // Başlıkta büyük/küçük harf duyarsız arama
     const search =
       typeof req.query.search === "string"
         ? req.query.search.trim()
@@ -74,6 +73,25 @@ export async function getEvents(req, res, next) {
     }
 
     const events = await Event.find(filter).sort({
+      date: 1,
+      time: 1,
+    });
+
+    return res.status(200).json(events);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// GET /events/upcoming
+// Bugünkü ve gelecekteki etkinlikleri getirir.
+export async function getUpcomingEvents(req, res, next) {
+  try {
+    const events = await Event.find({
+      date: {
+        $gte: todayStart(),
+      },
+    }).sort({
       date: 1,
       time: 1,
     });
